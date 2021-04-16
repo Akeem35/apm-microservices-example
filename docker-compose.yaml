@@ -7,13 +7,15 @@ services:
       PORT: 8080
       AUTH_API_ADDRESS: http://auth-api:8081
       TODOS_API_ADDRESS: http://todos-api:8082
-      ELASTIC_APM_SERVER_URL: ${SERVER}
+      ELASTIC_APM_SERVER_URL: "${IP_APM_SERVER}"
     ports:
       - 8080:8080
     depends_on:
       - auth-api
       - todos-api
       - users-api
+    networks: 
+    - front_elastic
 
   auth-api:
     build: ./auth-api
@@ -21,13 +23,16 @@ services:
     environment:
       AUTH_API_PORT: 8081
       JWT_SECRET: myfancysecret
+      GO111MODULE: "auto"
       USERS_API_ADDRESS: http://users-api:8083
-      ELASTIC_APM_SECRET_TOKEN: "${TOKEN}"
-      ELASTIC_APM_SERVER_URL: "${SERVER}"
+      ELASTIC_APM_SECRET_TOKEN: ""
+      ELASTIC_APM_SERVER_URL: "${IP_APM_SERVER}"
       ELASTIC_APM_LOG_FILE: "stdout"
       ELASTIC_APM_LOG_LEVEL: "debug"
     depends_on:
       - users-api
+    networks: 
+    - front_elastic
 
   todos-api:
     build: ./todos-api
@@ -38,13 +43,15 @@ services:
       REDIS_HOST: redis-queue
       REDIS_PORT: 6379
       REDIS_CHANNEL: log_channel
-      ELASTIC_APM_SECRET_TOKEN: "${TOKEN}"
-      ELASTIC_APM_SERVER_URL: "${SERVER}"
+      ELASTIC_APM_SECRET_TOKEN: ""
+      ELASTIC_APM_SERVER_URL: "${IP_APM_SERVER}"
       ELASTIC_APM_LOG_LEVEL: "debug"
       DEBUG: todos-api:*
       DEBUG: express:*
     depends_on:
       - redis-queue
+    networks: 
+    - front_elastic
 
   users-api:
     build: ./users-api
@@ -52,9 +59,11 @@ services:
     environment:
      SERVER_PORT: 8083
      JWT_SECRET: myfancysecret
-     ELASTIC_APM_SECRET_TOKEN: "${TOKEN}"
-     ELASTIC_APM_SERVER_URL: "${SERVER}"
+     ELASTIC_APM_SECRET_TOKEN: ""
+     ELASTIC_APM_SERVER_URL: "${IP_APM_SERVER}"
      ELASTIC_APM_LOG_LEVEL: "DEBUG"
+    networks: 
+    - front_elastic
      
   log-message-processor:
     build: ./log-message-processor
@@ -63,11 +72,20 @@ services:
       REDIS_HOST: redis-queue
       REDIS_PORT: 6379
       REDIS_CHANNEL: log_channel
-      ELASTIC_APM_SECRET_TOKEN: "${TOKEN}"
-      ELASTIC_APM_SERVER_URL: "${SERVER}"
+      ELASTIC_APM_SECRET_TOKEN: ""
+      ELASTIC_APM_SERVER_URL: "${IP_APM_SERVER}"
       ELASTIC_APM_DEBUG: "True"
     depends_on:
       - redis-queue
+    networks: 
+    - front_elastic
   
   redis-queue:
     image: redis
+    networks: 
+    - front_elastic
+
+networks:
+  front_elastic:
+    external: 
+      name: elastic-stacdockercompose_elastic

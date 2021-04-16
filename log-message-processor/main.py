@@ -29,13 +29,18 @@ if __name__ == '__main__':
     pubsub.subscribe([redis_channel])
     for item in pubsub.listen():
         try:
-            message = json.loads(str(item['data'].decode("utf-8")))
+            if isinstance(item['data'], int):
+                #do nothing
+                print('data is an integer')
+                continue
+            else:
+                message = json.loads(str(item['data'].decode("utf-8")))
         except Exception as e:
             log_message(e)
             continue
 
         spanTransaction = message['spanTransaction']
-        trace_parent1 = spanTransaction['context']['request']['headers']['elastic-apm-traceparent']
+        trace_parent1 = spanTransaction['context']['request']['headers']['traceparent']
         print('trace_parent_log: {}'.format(trace_parent1))
         trace_parent = TraceParent.from_string(trace_parent1)
         client.begin_transaction("logger-transaction", trace_parent=trace_parent)

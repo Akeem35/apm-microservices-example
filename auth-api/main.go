@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
-        "go.elastic.co/apm"
-	"go.elastic.co/apm/module/apmecho"
-        "go.elastic.co/apm/module/apmhttp"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	jwt "github.com/dgrijalva/jwt-go"
+	"go.elastic.co/apm"
+	"go.elastic.co/apm/module/apmecho"
+	"go.elastic.co/apm/module/apmhttp"
 )
 
 var (
@@ -69,16 +69,16 @@ type LoginRequest struct {
 
 func getLoginHandler(userService UserService) echo.HandlerFunc {
 	f := func(c echo.Context) error {
-                span, _ := apm.StartSpan(c.Request().Context(), "request-login", "app")
+		span, _ := apm.StartSpan(c.Request().Context(), "request-login", "app")
 		requestData := LoginRequest{}
 		decoder := json.NewDecoder(c.Request().Body)
 		if err := decoder.Decode(&requestData); err != nil {
 			log.Printf("could not read credentials from POST body: %s", err.Error())
 			return ErrHttpGenericMessage
 		}
-                span.End()
+		span.End()
 
-                span, ctx := apm.StartSpan(c.Request().Context(), "login", "app")
+		span, ctx := apm.StartSpan(c.Request().Context(), "login", "app")
 		user, err := userService.Login(ctx, requestData.Username, requestData.Password)
 		if err != nil {
 			if err != ErrWrongCredentials {
@@ -89,11 +89,10 @@ func getLoginHandler(userService UserService) echo.HandlerFunc {
 			return ErrWrongCredentials
 		}
 		token := jwt.New(jwt.SigningMethodHS256)
-                span.End()
-                
+		span.End()
 
 		// Set claims
-                span, _ = apm.StartSpan(c.Request().Context(), "generate-send-token", "app")
+		span, _ = apm.StartSpan(c.Request().Context(), "generate-send-token", "app")
 
 		claims := token.Claims.(jwt.MapClaims)
 		claims["username"] = user.Username
@@ -101,7 +100,6 @@ func getLoginHandler(userService UserService) echo.HandlerFunc {
 		claims["lastname"] = user.LastName
 		claims["role"] = user.Role
 		claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
- 
 
 		// Generate encoded token and send it as response.
 		t, err := token.SignedString([]byte(jwtSecret))
@@ -109,7 +107,7 @@ func getLoginHandler(userService UserService) echo.HandlerFunc {
 			log.Printf("could not generate a JWT token: %s", err.Error())
 			return ErrHttpGenericMessage
 		}
-                span.End()
+		span.End()
 
 		return c.JSON(http.StatusOK, map[string]string{
 			"accessToken": t,
