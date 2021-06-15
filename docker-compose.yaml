@@ -14,8 +14,6 @@ services:
       - auth-api
       - todos-api
       - users-api
-    networks: 
-    - front_elastic
 
   auth-api:
     build: ./auth-api
@@ -31,8 +29,6 @@ services:
       ELASTIC_APM_LOG_LEVEL: "debug"
     depends_on:
       - users-api
-    networks: 
-    - front_elastic
 
   todos-api:
     build: ./todos-api
@@ -50,8 +46,6 @@ services:
       DEBUG: express:*
     depends_on:
       - redis-queue
-    networks: 
-    - front_elastic
 
   users-api:
     build: ./users-api
@@ -62,8 +56,6 @@ services:
      ELASTIC_APM_SECRET_TOKEN: ""
      ELASTIC_APM_SERVER_URL: "${IP_APM_SERVER}"
      ELASTIC_APM_LOG_LEVEL: "DEBUG"
-    networks: 
-    - front_elastic
      
   log-message-processor:
     build: ./log-message-processor
@@ -77,15 +69,7 @@ services:
       ELASTIC_APM_DEBUG: "True"
     depends_on:
       - redis-queue
-    networks: 
-    - front_elastic
   
   redis-queue:
     image: redis
-    networks: 
-    - front_elastic
 
-networks:
-  front_elastic:
-    external: 
-      name: elastic-stacdockercompose_elastic
