@@ -5,16 +5,7 @@ import json
 import requests
 import time
 import random
-import elasticapm
 
-from elasticapm.utils.disttracing import TraceParent
-
-from elasticapm import Client
-
-client = Client({'SERVICE_NAME': 'python'})
-
-
-@elasticapm.capture_span()
 def log_message(message):
     time_delay = random.randrange(0, 2000)
     time.sleep(time_delay / 1000)
@@ -39,12 +30,4 @@ if __name__ == '__main__':
             log_message(e)
             continue
 
-        spanTransaction = message['spanTransaction']
-        trace_parent1 = spanTransaction['context']['request']['headers']['traceparent']
-        print('trace_parent_log: {}'.format(trace_parent1))
-        trace_parent = TraceParent.from_string(trace_parent1)
-        client.begin_transaction("logger-transaction", trace_parent=trace_parent)
-
         log_message(message)
-
-        client.end_transaction('logger-transaction')
