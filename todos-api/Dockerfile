@@ -1,4 +1,4 @@
-FROM node:8-alpine
+FROM node:12-alpine
 
 EXPOSE 8082
 
@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 COPY package.json ./
 RUN npm install
-RUN npm install elastic-apm-node --save
+RUN npm install newrelic --save
 
 COPY . .
 

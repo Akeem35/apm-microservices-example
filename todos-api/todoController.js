@@ -1,4 +1,5 @@
 'use strict';
+const nr = require('newrelic')
 const cache = require('memory-cache');
 
 const OPERATION_CREATE = 'CREATE',
@@ -12,8 +13,13 @@ class TodoController {
 
     // TODO: these methods are not concurrent-safe
     list (req, res) {
-        const data = this._getTodoData(req.user.username)
-        res.json(data.items)
+        var self = this
+        const test = nr.startSegment('testing', true, function() {
+            const data = self._getTodoData(req.user.username)
+            return data.items
+        })
+        
+        res.json(test)
     }
 
     create (req, res) {
@@ -51,7 +57,6 @@ class TodoController {
         }),
         function(err) {
           if (err) {
-            apm.captureError(err)
           }
         }
       )
