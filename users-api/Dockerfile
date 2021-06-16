@@ -11,4 +11,4 @@ RUN ./mvnw dependency:resolve
 COPY . .
 RUN ./mvnw install
 
-CMD ["java", "-jar", "./target/users-api-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-javaagent:/usr/src/app/newrelic/newrelic.jar", "-jar", "./target/users-api-0.0.1-SNAPSHOT.jar"]
