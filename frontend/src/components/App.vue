@@ -13,10 +13,8 @@ export default {
     }
   },
   created () {
-    this.span = this.$apm.startSpan('component-app', 'custom')
   },
   mounted () {
-    this.span && this.span.end()
   }
 }
 </script>

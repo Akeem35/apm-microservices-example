@@ -2,7 +2,6 @@ import Vue from 'vue'
 
 import Auth from '@/auth'
 import Router from 'vue-router'
-import { ApmVuePlugin } from '@elastic/apm-rum-vue'
 
 Vue.use(Router)
 
@@ -22,18 +21,6 @@ const router = new Router({
       beforeEnter: requireLoggedIn
     }
   ]
-})
-
-const ELASTIC_APM_SERVER_URL = process.env.ELASTIC_APM_SERVER_URL
-
-Vue.use(ApmVuePlugin, {
-  router,
-  config: {
-    serviceName: 'frontend',
-    serverUrl: ELASTIC_APM_SERVER_URL,
-    serviceVersion: '',
-    logLevel: 'debug'
-  }
 })
 
 function requireLoggedIn (to, from, next) {

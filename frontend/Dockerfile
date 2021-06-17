@@ -6,7 +6,6 @@ WORKDIR /usr/src/app
 
 COPY package.json ./
 RUN npm install
-RUN npm install --save @elastic/apm-rum-vue
 
 COPY . .
 

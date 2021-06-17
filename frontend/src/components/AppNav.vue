@@ -32,10 +32,8 @@ export default {
     }
   },
   created () {
-    this.span = this.$apm.startSpan('component-app-nav', 'custom')
   },
   mounted () {
-    this.span && this.span.end()
   },
   methods: {
     logout () {

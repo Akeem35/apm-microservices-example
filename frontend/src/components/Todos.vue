@@ -77,7 +77,6 @@ export default {
   },
   created () {
     this.loadTasks()
-    this.span = this.$apm.startSpan('component-todos', 'external.http')
   },
   computed: {
     total () {
@@ -85,7 +84,6 @@ export default {
     }
   },
   mounted () {
-    this.span && this.span.end()
   },
   methods: {
     loadTasks () {
