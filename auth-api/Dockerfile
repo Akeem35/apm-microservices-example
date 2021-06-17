@@ -11,6 +11,7 @@ COPY . .
 # RUN dep ensure -update golang.org/x/sys
 
 # RUN go mod init auth-api
+RUN go get github.com/newrelic/go-agent
 RUN go mod tidy
 RUN go build -o auth-api
 

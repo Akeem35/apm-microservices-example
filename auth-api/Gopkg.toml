@@ -28,7 +28,3 @@
 [[constraint]]
   name = "github.com/labstack/echo"
   version = "3.3.10"
-
-[[override]]
-  branch = "master"
-  name = "github.com/elastic/apm-agent-go"

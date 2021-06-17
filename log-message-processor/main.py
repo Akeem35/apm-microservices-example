@@ -5,7 +5,9 @@ import json
 import requests
 import time
 import random
+import newrelic.agent
 
+@newrelic.agent.function_trace(name="testing")
 def log_message(message):
     time_delay = random.randrange(0, 2000)
     time.sleep(time_delay / 1000)

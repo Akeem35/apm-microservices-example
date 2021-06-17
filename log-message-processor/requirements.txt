@@ -1,2 +1,3 @@
 redis==2.10.6
 requests
+newrelic

@@ -10,9 +10,8 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"go.elastic.co/apm"
-	"go.elastic.co/apm/module/apmecho"
-	"go.elastic.co/apm/module/apmhttp"
+	"github.com/newrelic/go-agent/v3/integrations/nrecho-v3"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 var (
@@ -26,6 +25,16 @@ var (
 )
 
 func main() {
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("auth-api-todo-app"),
+		newrelic.ConfigLicense("dd4f396711488259fbc92a1a5af076b8a661NRAL"),
+		newrelic.ConfigDistributedTracerEnabled(true),
+	)
+
+	if err != nil {
+		log.Printf("New Relic error: %s", err.Error())
+	}
+
 	hostport := ":" + os.Getenv("AUTH_API_PORT")
 	userAPIAddress := os.Getenv("USERS_API_ADDRESS")
 
@@ -35,7 +44,7 @@ func main() {
 	}
 
 	userService := UserService{
-		Client:         apmhttp.WrapClient(http.DefaultClient),
+		Client:         http.DefaultClient,
 		UserAPIAddress: userAPIAddress,
 		AllowedUserHashes: map[string]interface{}{
 			"admin_admin": nil,
@@ -44,8 +53,11 @@ func main() {
 		},
 	}
 
+	// Echo instance
 	e := echo.New()
-	e.Use(apmecho.Middleware())
+
+	// The New Relic Middleware should be the first middleware registered
+	e.Use(nrecho.Middleware(app))
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -69,17 +81,22 @@ type LoginRequest struct {
 
 func getLoginHandler(userService UserService) echo.HandlerFunc {
 	f := func(c echo.Context) error {
-		span, _ := apm.StartSpan(c.Request().Context(), "request-login", "app")
+		txn := nrecho.FromContext(c)
+		segment := txn.StartSegment("request-login")
 		requestData := LoginRequest{}
 		decoder := json.NewDecoder(c.Request().Body)
 		if err := decoder.Decode(&requestData); err != nil {
 			log.Printf("could not read credentials from POST body: %s", err.Error())
 			return ErrHttpGenericMessage
 		}
-		span.End()
+		segment.End()
 
-		span, ctx := apm.StartSpan(c.Request().Context(), "login", "app")
-		user, err := userService.Login(ctx, requestData.Username, requestData.Password)
+		txn.AddAttribute("username", requestData.Username)
+		segment2 := txn.StartSegment("login")
+		ctx := c.Request().Context()
+
+		// log.Printf("%+v\n", ctx)
+		user, err := userService.Login(ctx, requestData.Username, requestData.Password, txn)
 		if err != nil {
 			if err != ErrWrongCredentials {
 				log.Printf("could not authorize user '%s': %s", requestData.Username, err.Error())
@@ -89,11 +106,9 @@ func getLoginHandler(userService UserService) echo.HandlerFunc {
 			return ErrWrongCredentials
 		}
 		token := jwt.New(jwt.SigningMethodHS256)
-		span.End()
+		segment2.End()
 
-		// Set claims
-		span, _ = apm.StartSpan(c.Request().Context(), "generate-send-token", "app")
-
+		segment3 := txn.StartSegment("generate-sent-token")
 		claims := token.Claims.(jwt.MapClaims)
 		claims["username"] = user.Username
 		claims["firstname"] = user.FirstName
@@ -107,7 +122,7 @@ func getLoginHandler(userService UserService) echo.HandlerFunc {
 			log.Printf("could not generate a JWT token: %s", err.Error())
 			return ErrHttpGenericMessage
 		}
-		span.End()
+		segment3.End()
 
 		return c.JSON(http.StatusOK, map[string]string{
 			"accessToken": t,

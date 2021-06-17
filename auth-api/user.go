@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 var allowedUserHashes = map[string]interface{}{
@@ -33,8 +34,8 @@ type UserService struct {
 	AllowedUserHashes map[string]interface{}
 }
 
-func (h *UserService) Login(ctx context.Context, username, password string) (User, error) {
-	user, err := h.getUser(ctx, username)
+func (h *UserService) Login(ctx context.Context, username, password string, txn *newrelic.Transaction) (User, error) {
+	user, err := h.getUser(ctx, username, txn)
 	if err != nil {
 		return user, err
 	}
@@ -48,7 +49,7 @@ func (h *UserService) Login(ctx context.Context, username, password string) (Use
 	return user, nil
 }
 
-func (h *UserService) getUser(ctx context.Context, username string) (User, error) {
+func (h *UserService) getUser(ctx context.Context, username string, txn *newrelic.Transaction) (User, error) {
 	var user User
 
 	token, err := h.getUserAPIToken(username)
@@ -57,12 +58,14 @@ func (h *UserService) getUser(ctx context.Context, username string) (User, error
 	}
 	url := fmt.Sprintf("%s/users/%s", h.UserAPIAddress, username)
 	req, _ := http.NewRequest("GET", url, nil)
+
+	s := newrelic.StartExternalSegment(txn, req)
 	req.Header.Add("Authorization", "Bearer "+token)
 
 	req = req.WithContext(ctx)
 
 	resp, err := h.Client.Do(req)
-
+	s.End()
 	if err != nil {
 		return user, err
 	}
