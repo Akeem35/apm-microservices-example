@@ -30,7 +30,6 @@ const app = express()
 
 const localServiceName = 'todos-api';
 
-
 app.use(jwt({ secret: jwtSecret }))
 app.use(function (err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
@@ -39,7 +38,6 @@ app.use(function (err, req, res, next) {
 })
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-
 const routes = require('./routes')
 routes(app, {redisClient, logChannel})
 

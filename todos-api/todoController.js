@@ -1,6 +1,22 @@
 'use strict';
 const nr = require('newrelic')
 const cache = require('memory-cache');
+const newrelicFormatter = require('@newrelic/winston-enricher')
+const winston = require('winston')
+
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+      winston.format.label({label: 'test'}),
+      newrelicFormatter()
+    ),
+    defaultMeta: { service: 'user-service' },
+    transports: [
+      new winston.transports.Console(),
+      new winston.transports.File({ filename: 'combined.log' }),
+    ],
+});
+  
 
 const OPERATION_CREATE = 'CREATE',
       OPERATION_DELETE = 'DELETE';
@@ -28,6 +44,7 @@ class TodoController {
         var self = this;
 
         const result = nr.startSegment('create-item', true, function() {
+            logger.log('info', "create-item");
             const data = self._getTodoData(req.user.username)
             const todo = {
                 content: req.body.content,
@@ -50,6 +67,7 @@ class TodoController {
         const id = req.params.taskId
 
         nr.startSegment('delete-item', true, function() {
+            logger.log('info', "delete-item");
             delete data.items[id]
             self._setTodoData(req.user.username, data)
         });
@@ -62,6 +80,7 @@ class TodoController {
     _logOperation(opName, username, todoId) {
         var self = this;
         nr.startSegment('logging-operation', true, function() {
+            logger.log('info', "logging operation");
             self._redisClient.publish(
                 self._logChannel,
                 JSON.stringify({
@@ -112,6 +131,7 @@ class TodoController {
 
     _setTodoData (userID, data) {
         nr.startSegment('setting-items', true, function() {
+            logger.log('info', "setting-items")
             cache.put(userID, data)
         });
 

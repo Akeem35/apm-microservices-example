@@ -7,6 +7,6 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-RUN NEW_RELIC_CONFIG_FILE=/usr/src/app/newrelic.ini
-CMD ["newrelic-admin", "run-program", "python3","-u","main.py"]
+ENV NEW_RELIC_CONFIG_FILE=/usr/src/app/newrelic.ini
+CMD ["python3","-u","main.py"]
 

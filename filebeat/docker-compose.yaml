@@ -1,0 +1,18 @@
+version: "3"
+services:
+    filebeat:
+        image: docker.elastic.co/beats/filebeat:7.8.0
+        entrypoint: "filebeat -e -strict.perms=false"
+        # command: chmod go-w /usr/share/filebeat/filebeat.yml
+        volumes:
+            - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+            - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        user: root
+
+    # logstash:
+    #     image: docker.elastic.co/logstash/logstash:7.8.0
+    #     ports:
+    #     - 5044:5044
+    #     volumes: 
+    #         - ./pipeline/:/usr/share/logstash/pipeline/

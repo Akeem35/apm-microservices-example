@@ -1,0 +1,1 @@
+docker run --rm -it -v ${pwd}/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf -p 5044:5044 docker.elastic.co/logstash/logstash:7.11.1 /bin/bash -c "/usr/share/logstash/bin/logstash-plugin install logstash-output-newrelic && logstash -f /usr/share/logstash/pipeline/logstash.conf"

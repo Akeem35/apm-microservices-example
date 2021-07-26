@@ -6,6 +6,11 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"fmt"
+
+	// log "github.com/sirupsen/logrus"
+    // "github.com/newrelic/go-agent/v3/integrations/logcontext/nrlogrusplugin"
+	// "github.com/newrelic/go-agent/v3/newrelic"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
@@ -25,6 +30,7 @@ var (
 )
 
 func main() {
+
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName("auth-api-todo-app"),
 		newrelic.ConfigLicense("dd4f396711488259fbc92a1a5af076b8a661NRAL"),
@@ -81,6 +87,14 @@ type LoginRequest struct {
 
 func getLoginHandler(userService UserService) echo.HandlerFunc {
 	f := func(c echo.Context) error {
+
+		log.Printf("Create log")
+		// logger := log.New()
+		// logger.SetFormatter(nrlogrusplugin.ContextFormatter{})
+		// ctx := newrelic.NewContext(context.Background(), txn)
+		// testing := logger.WithContext(ctx).Info("request-login!")
+		// log.Printf("%+v\n", testing)
+
 		txn := nrecho.FromContext(c)
 		segment := txn.StartSegment("request-login")
 		requestData := LoginRequest{}
