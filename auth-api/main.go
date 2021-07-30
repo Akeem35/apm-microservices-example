@@ -33,7 +33,7 @@ func main() {
 
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName("auth-api-todo-app"),
-		newrelic.ConfigLicense("dd4f396711488259fbc92a1a5af076b8a661NRAL"),
+		newrelic.ConfigLicense("license key"),
 		newrelic.ConfigDistributedTracerEnabled(true),
 	)
 
